@@ -54,7 +54,7 @@ function safe(val, fallback = '') {
 
 async function enrichWithPULSEAI(reportId, rawText) {
   try {
-    const res = await fetch('https://web-production-9ff39.up.railway.app/analyze', {
+    const res = await fetch('https://pulse-ai-etn6.onrender.com/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: rawText })
@@ -103,7 +103,7 @@ async function enrichWithPULSEAI(reportId, rawText) {
       affected_people: doc.data().affected_people || 0
     }));
 
-    const clusterRes = await fetch('https://web-production-9ff39.up.railway.app/cluster', {
+    const clusterRes = await fetch('https://pulse-ai-etn6.onrender.com/cluster', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reports })
@@ -129,7 +129,7 @@ for (const cluster of clusterData.clusters) {
 }
 
 // Escalate urgency on old unresolved reports
-fetch('https://web-production-9ff39.up.railway.app/escalate', {
+fetch('https://pulse-ai-etn6.onrender.com/escalate', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ reports: reports })
@@ -194,7 +194,7 @@ async function deleteConversation(senderNumber) {
 // Detect language using AI
 async function detectLanguage(text) {
   try {
-    const res = await fetch('https://web-production-9ff39.up.railway.app/analyze', {
+    const res = await fetch('https://pulse-ai-etn6.onrender.com/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text })
@@ -388,7 +388,7 @@ async function processVerificationAsync(mediaUrl, senderNumber, task, taskId, vo
       `${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`
     ).toString('base64');
 
-    const verifyRes = await fetch('https://web-production-9ff39.up.railway.app/verify-proof', {
+    const verifyRes = await fetch('https://pulse-ai-etn6.onrender.com/verify-proof', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1318,7 +1318,7 @@ async function runEscalation() {
       days_unmet:    doc.data().days_unmet || 0
     }));
 
-    const res = await fetch('https://web-production-9ff39.up.railway.app/escalate', {
+    const res = await fetch('https://pulse-ai-etn6.onrender.com/escalate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reports })
@@ -1329,7 +1329,7 @@ async function runEscalation() {
       console.log(`⬆️ Hourly escalation: ${data.escalated_count} reports escalated`);
 
       // Re-run clustering after escalation
-      const clusterRes = await fetch('https://web-production-9ff39.up.railway.app/cluster', {
+      const clusterRes = await fetch('https://pulse-ai-etn6.onrender.com/cluster', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reports })
@@ -1440,7 +1440,7 @@ app.post('/generate-report', async (req, res) => {
     }
 
     // Call Person A's report generator
-    const flaskRes = await fetch('https://web-production-9ff39.up.railway.app/generate-report', {
+    const flaskRes = await fetch('https://pulse-ai-etn6.onrender.com/generate-report', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ cluster, reports: reportsData })
