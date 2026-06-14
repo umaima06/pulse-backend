@@ -1081,7 +1081,7 @@ app.post("/start-call", async (req, res) => {
     const call = await client.calls.create({
       to: toNumber,
       from: process.env.TWILIO_REAL_NUMBER,
-      url: `https://pulse-backend-production-cd6d.up.railway.app/incoming-call`
+      url: `https://pulse-backend-hbrd.onrender.com/incoming-call`
     })
 
     console.log("✅ Call SID:", call.sid)
@@ -1099,7 +1099,7 @@ app.all('/incoming-call', (req, res) => {
   res.set('Content-Type', 'text/xml');
   res.send(`
     <Response>
-      <Gather action="https://pulse-backend-production-cd6d.up.railway.app/handle-language" method="POST" numDigits="1" timeout="10">
+      <Gather action="https://pulse-backend-hbrd.onrender.com/handle-language" method="POST" numDigits="1" timeout="10">
         <Say language="hi-IN" voice="Polly.Aditi">
           Namaste. PULSE mein aapka swagat hai.
           Hindi ke liye 1 dabaiye.
@@ -1108,7 +1108,7 @@ app.all('/incoming-call', (req, res) => {
           English ke liye 4 dabaiye.
         </Say>
       </Gather>
-      <Redirect>https://pulse-backend-production-cd6d.up.railway.app/incoming-call</Redirect>
+      <Redirect>https://pulse-backend-hbrd.onrender.com/incoming-call</Redirect>
     </Response>
   `);
 });
@@ -1119,7 +1119,7 @@ app.all('/handle-language', (req, res) => {
   if (!digit) {
     return res.send(`
       <Response>
-        <Redirect>https://pulse-backend-production-cd6d.up.railway.app/incoming-call</Redirect>
+        <Redirect>https://pulse-backend-hbrd.onrender.com/incoming-call</Redirect>
       </Response>
     `);
   }
@@ -1141,13 +1141,13 @@ app.all('/handle-language', (req, res) => {
   res.set('Content-Type', 'text/xml');
   res.send(`
     <Response>
-      <Gather action="https://pulse-backend-production-cd6d.up.railway.app/handle-keypress?lang=${lang.code}&amp;langname=${lang.name}" method="POST" numDigits="1" timeout="10">
+      <Gather action="https://pulse-backend-hbrd.onrender.com/handle-keypress?lang=${lang.code}&amp;langname=${lang.name}" method="POST" numDigits="1" timeout="10">
         <Say language="${lang.code}">
           ${menus[lang.code]}
         </Say>
       </Gather>
        <!-- THIS SAVES YOUR CALL FROM DYING -->
-      <Redirect>https://pulse-backend-production-cd6d.up.railway.app/handle-language</Redirect>
+      <Redirect>https://pulse-backend-hbrd.onrender.com/handle-language</Redirect>
     </Response>
   `);
 });
@@ -1174,7 +1174,7 @@ app.all('/handle-keypress', (req, res) => {
     <Response>
       <Say language="${lang}">${confirms[lang]}</Say>
       <Record
-        action="https://pulse-backend-production-cd6d.up.railway.app/handle-recording?need_type=${needType}&amp;lang=${lang}&amp;langname=${langname}"
+        action="https://pulse-backend-hbrd.onrender.com/handle-recording?need_type=${needType}&amp;lang=${lang}&amp;langname=${langname}"
         method="POST"
         maxLength="30"
         playBeep="true"
