@@ -18,9 +18,12 @@ const client = twilio(
   process.env.TWILIO_ACCOUNT_SID,
   process.env.TWILIO_AUTH_TOKEN
 );
+const firebaseKey = JSON.parse(process.env.FIREBASE_KEY);
+firebaseKey.private_key = firebaseKey.private_key.replace(/\\n/g, '\n');
+console.log("Firebase key loaded, project:", firebaseKey.project_id);
 
 admin.initializeApp({
-  credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_KEY))
+  credential: admin.credential.cert(firebaseKey)  // ← use the fixed variable!
 });
 
 const db = admin.firestore();
@@ -54,7 +57,7 @@ function safe(val, fallback = '') {
 
 async function enrichWithPULSEAI(reportId, rawText) {
   try {
-    const res = await fetch('https://web-production-9ff39.up.railway.app/analyze', {
+    const res = await fetch('https://pulse-ai-etn6.onrender.com/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: rawText })
@@ -103,7 +106,7 @@ async function enrichWithPULSEAI(reportId, rawText) {
       affected_people: doc.data().affected_people || 0
     }));
 
-    const clusterRes = await fetch('https://web-production-9ff39.up.railway.app/cluster', {
+    const clusterRes = await fetch('https://pulse-ai-etn6.onrender.com/cluster', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reports })
@@ -129,7 +132,7 @@ for (const cluster of clusterData.clusters) {
 }
 
 // Escalate urgency on old unresolved reports
-fetch('https://web-production-9ff39.up.railway.app/escalate', {
+fetch('https://pulse-ai-etn6.onrender.com/escalate', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ reports: reports })
@@ -194,7 +197,7 @@ async function deleteConversation(senderNumber) {
 // Detect language using AI
 async function detectLanguage(text) {
   try {
-    const res = await fetch('https://web-production-9ff39.up.railway.app/analyze', {
+    const res = await fetch('https://pulse-ai-etn6.onrender.com/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text })
@@ -388,7 +391,7 @@ async function processVerificationAsync(mediaUrl, senderNumber, task, taskId, vo
       `${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`
     ).toString('base64');
 
-    const verifyRes = await fetch('https://web-production-9ff39.up.railway.app/verify-proof', {
+    const verifyRes = await fetch('https://pulse-ai-etn6.onrender.com/verify-proof', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1081,7 +1084,7 @@ app.post("/start-call", async (req, res) => {
     const call = await client.calls.create({
       to: toNumber,
       from: process.env.TWILIO_REAL_NUMBER,
-      url: `https://pulse-backend-production-cd6d.up.railway.app/incoming-call`
+      url: `https://pulse-backend-hbrd.onrender.com/incoming-call`
     })
 
     console.log("✅ Call SID:", call.sid)
@@ -1099,7 +1102,7 @@ app.all('/incoming-call', (req, res) => {
   res.set('Content-Type', 'text/xml');
   res.send(`
     <Response>
-      <Gather action="https://pulse-backend-production-cd6d.up.railway.app/handle-language" method="POST" numDigits="1" timeout="10">
+      <Gather action="https://pulse-backend-hbrd.onrender.com/handle-language" method="POST" numDigits="1" timeout="10">
         <Say language="hi-IN" voice="Polly.Aditi">
           Namaste. PULSE mein aapka swagat hai.
           Hindi ke liye 1 dabaiye.
@@ -1108,7 +1111,7 @@ app.all('/incoming-call', (req, res) => {
           English ke liye 4 dabaiye.
         </Say>
       </Gather>
-      <Redirect>https://pulse-backend-production-cd6d.up.railway.app/incoming-call</Redirect>
+      <Redirect>https://pulse-backend-hbrd.onrender.com/incoming-call</Redirect>
     </Response>
   `);
 });
@@ -1119,7 +1122,7 @@ app.all('/handle-language', (req, res) => {
   if (!digit) {
     return res.send(`
       <Response>
-        <Redirect>https://pulse-backend-production-cd6d.up.railway.app/incoming-call</Redirect>
+        <Redirect>https://pulse-backend-hbrd.onrender.com/incoming-call</Redirect>
       </Response>
     `);
   }
@@ -1141,13 +1144,13 @@ app.all('/handle-language', (req, res) => {
   res.set('Content-Type', 'text/xml');
   res.send(`
     <Response>
-      <Gather action="https://pulse-backend-production-cd6d.up.railway.app/handle-keypress?lang=${lang.code}&amp;langname=${lang.name}" method="POST" numDigits="1" timeout="10">
+      <Gather action="https://pulse-backend-hbrd.onrender.com/handle-keypress?lang=${lang.code}&amp;langname=${lang.name}" method="POST" numDigits="1" timeout="10">
         <Say language="${lang.code}">
           ${menus[lang.code]}
         </Say>
       </Gather>
        <!-- THIS SAVES YOUR CALL FROM DYING -->
-      <Redirect>https://pulse-backend-production-cd6d.up.railway.app/handle-language</Redirect>
+      <Redirect>https://pulse-backend-hbrd.onrender.com/handle-language</Redirect>
     </Response>
   `);
 });
@@ -1174,7 +1177,7 @@ app.all('/handle-keypress', (req, res) => {
     <Response>
       <Say language="${lang}">${confirms[lang]}</Say>
       <Record
-        action="https://pulse-backend-production-cd6d.up.railway.app/handle-recording?need_type=${needType}&amp;lang=${lang}&amp;langname=${langname}"
+        action="https://pulse-backend-hbrd.onrender.com/handle-recording?need_type=${needType}&amp;lang=${lang}&amp;langname=${langname}"
         method="POST"
         maxLength="30"
         playBeep="true"
@@ -1318,7 +1321,7 @@ async function runEscalation() {
       days_unmet:    doc.data().days_unmet || 0
     }));
 
-    const res = await fetch('https://web-production-9ff39.up.railway.app/escalate', {
+    const res = await fetch('https://pulse-ai-etn6.onrender.com/escalate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reports })
@@ -1329,7 +1332,7 @@ async function runEscalation() {
       console.log(`⬆️ Hourly escalation: ${data.escalated_count} reports escalated`);
 
       // Re-run clustering after escalation
-      const clusterRes = await fetch('https://web-production-9ff39.up.railway.app/cluster', {
+      const clusterRes = await fetch('https://pulse-ai-etn6.onrender.com/cluster', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reports })
@@ -1440,7 +1443,7 @@ app.post('/generate-report', async (req, res) => {
     }
 
     // Call Person A's report generator
-    const flaskRes = await fetch('https://web-production-9ff39.up.railway.app/generate-report', {
+    const flaskRes = await fetch('https://pulse-ai-etn6.onrender.com/generate-report', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ cluster, reports: reportsData })
@@ -2019,7 +2022,7 @@ Basically… we turn chaos into coordinated action.`
 
    // ─── 6. AI MODE 🤖 ─────────────────────────────
 
-const aiRes = await fetch(`${process.env.AI_BASE_URL}/ask-ai`, {
+const aiRes = await fetch(`${process.env.AI_BASE_URL || 'https://pulse-ai-etn6.onrender.com'}/ask-ai`, {
   method: "POST",
   headers: {
     "Content-Type": "application/json"
@@ -2109,7 +2112,7 @@ app.post('/reassign', async (req, res) => {
     const best = scored[0];
 
     // 🔥 STEP 4: REUSE ASSIGN LOGIC
-    const assignRes = await fetch(`http://localhost:${PORT}/assign-volunteer`, {
+    const assignRes = await fetch(`https://pulse-backend-hbrd.onrender.com/assign-volunteer`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -2193,7 +2196,7 @@ app.post('/force-assign', async (req, res) => {
     scored.sort((a, b) => a.distance - b.distance);
     const best = scored[0];
 
-    const assignRes = await fetch(`http://localhost:${PORT}/assign-volunteer`, {
+    const assignRes = await fetch(`https://pulse-backend-hbrd.onrender.com/assign-volunteer`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
