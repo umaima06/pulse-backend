@@ -2019,7 +2019,7 @@ Basically… we turn chaos into coordinated action.`
 
    // ─── 6. AI MODE 🤖 ─────────────────────────────
 
-const aiRes = await fetch(`${process.env.AI_BASE_URL}/ask-ai`, {
+const aiRes = await fetch(`${process.env.AI_BASE_URL || 'https://pulse-ai-etn6.onrender.com'}/ask-ai`, {
   method: "POST",
   headers: {
     "Content-Type": "application/json"
